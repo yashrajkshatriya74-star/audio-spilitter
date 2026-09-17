@@ -1,4 +1,4 @@
-name: Build Android APK
+name: Build Android APK (Native Kotlin)
 
 on:
   push:
@@ -7,36 +7,29 @@ on:
 
 jobs:
   build:
-    runs-on: ubuntu-22.04
+    runs-on: ubuntu-latest
 
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
 
-      - name: Set up Python
-        uses: actions/setup-python@v5
+      - name: Set up JDK 17
+        uses: actions/setup-java@v4
         with:
-          python-version: '3.11'
+          distribution: 'temurin'
+          java-version: '17'
 
-      - name: Install system dependencies
-        run: |
-          sudo apt-get update
-          sudo apt-get install -y git zip unzip openjdk-17-jdk python3-pip autoconf libtool pkg-config zlib1g-dev libncurses5-dev libncursesw5-dev libtinfo5 cmake libffi-dev libssl-dev build-essential ccache
+      - name: Set up Android SDK
+        uses: android-actions/setup-android@v3
 
-      - name: Install buildozer + cython
-        run: |
-          pip install --upgrade pip
-          pip install buildozer cython==0.29.36
+      - name: Setup Gradle
+        uses: gradle/actions/setup-gradle@v4
 
-      - name: Build APK with Buildozer (this takes 20-40 minutes)
-        run: |
-          yes | buildozer android debug
-        env:
-          # Non-interactive Android SDK license acceptance
-          ANDROID_SDK_LICENSE_ACCEPTED: "yes"
+      - name: Build debug APK
+        run: gradle assembleDebug --no-daemon
 
       - name: Upload APK
         uses: actions/upload-artifact@v4
         with:
-          name: AudioSplitterPro-Android-APK
-          path: bin/*.apk
+          name: AudioSplitterPro-Native-APK
+          path: app/build/outputs/apk/debug/app-debug.apk
